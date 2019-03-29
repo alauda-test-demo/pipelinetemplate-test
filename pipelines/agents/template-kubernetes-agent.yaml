@@ -1,0 +1,62 @@
+apiVersion: devops.alauda.io/v1alpha1
+kind: PipelineTemplate
+metadata:
+  name: kubernetesAgent
+  namespace: default
+  annotations:
+    alauda.io/displayName.zh-CN: "K8S 节点"
+    alauda.io/version: "0.0.2"
+  labels:
+    category: DeployService
+spec:
+  engine: graph
+  withSCM: false
+  agent:
+    label: java
+    raw: |-
+      {
+        kubernetes {
+                  label 'mypod'
+                  defaultContainer 'jnlp'
+                  yaml """
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              labels:
+                some-label: some-label-value
+            spec:
+              containers:
+              - name: busybox
+                image: busybox
+                command:
+                - cat
+                tty: true
+            """
+                }
+      }
+  stages:
+    - name: "HelloWorldTask"
+      tasks:
+        - name: helloWorldTask
+          kind: PipelineTaskTemplate
+          type: public/helloWorldTask
+  arguments:
+    - displayName:
+        zh-CN: "Hello World"
+        en: "Hello World"
+      items:
+        - name: helloText
+          schema:
+            type: string
+          binding:
+            - helloWorldTask.args.helloText
+          display:
+            type: string
+            name:
+              zh-CN: "Hello Text"
+              en: "Hello Text"
+            description:
+              zh-CN: "Hello Text"
+              en: "Hello Text"
+          required: true
+          value: ""
