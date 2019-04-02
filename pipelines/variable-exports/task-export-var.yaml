@@ -1,0 +1,38 @@
+apiVersion: devops.alauda.io/v1alpha1
+kind: PipelineTaskTemplate
+metadata:
+  name: exportVarTask
+  annotations:
+    alauda.io/displayName.zh-CN: "Hello world for export variable task"
+    alauda.io/version: "0.0.1"
+  labels:
+    category: CI
+spec:
+  engine: gotpl
+  agent:
+    label: "temp"
+  body: |+
+    echo "{{.helloText}}"
+    def result = "just for demonstration"
+    
+    // auto-genereated by jenkinsfilext
+    alaudaStorage.add("buildStage", result, "demo-result")
+  exports:
+  - name: Demo_Result
+    var: result # will auto-generate variable by this, declare first
+    description:
+      zh-CN: "Store build result"
+      en: "Store build result"
+  arguments:
+    - name: "helloText"
+      schema:
+        type: string
+      required: true
+      display:
+        type: string
+        name:
+          zh-CN: "Hello text"
+          en: "Hello text"
+        description:
+          zh-CN: "Hello text"
+          en: "Hello text"
