@@ -3,13 +3,13 @@ kind: PipelineTemplate
 metadata:
   name: JZBuild
   annotations:
-    alauda.io/displayName.zh-CN: JZBUILD
-    alauda.io/displayName.en: JZ Build docker image
-    alauda.io/description.zh-CN: 克隆代码并构建镜像
-    alauda.io/description.en: Clone code and builds a docker image
-    alauda.io/readme.zh-CN: 克隆代码并构建镜像
-    alauda.io/readme.en: Clone code and builds a docker image
-    alauda.io/version: v0.20
+    alauda.io/displayName.zh-CN: JZBUILD22
+    alauda.io/displayName.en: JZ Build
+    alauda.io/description.zh-CN: 克隆22代码并构建镜像
+    alauda.io/description.en: Clone22e
+    alauda.io/readme.zh-CN: 克隆代码222并构建镜像
+    alauda.io/readme.en: Clone22
+    alauda.io/version: v0.21
     alauda.io/style.icon: build
   labels:
     category: CI
