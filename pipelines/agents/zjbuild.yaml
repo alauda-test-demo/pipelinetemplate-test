@@ -1,24 +1,23 @@
 apiVersion: devops.alauda.io/v1alpha1
 kind: PipelineTemplate
 metadata:
-  name: JZBuild
+  name: JZGolangBuild
+  namespace: default
   annotations:
-    alauda.io/displayName.zh-CN: JZBUILD22
-    alauda.io/displayName.en: JZ Build
-    alauda.io/description.zh-CN: 克隆22代码并构建镜像
-    alauda.io/description.en: Clone22e
-    alauda.io/readme.zh-CN: 克隆代码222并构建镜像
-    alauda.io/readme.en: Clone22
-    alauda.io/version: v0.21
-    alauda.io/style.icon: build
+    alauda.io/displayName.zh-CN: "JZ Golang 构建并部署"
+    alauda.io/displayName.en: "aaaGolang Build & Deploy Application"
+    alauda.io/description.zh-CN: "aaa克隆代码 -> Golang 构建 -> Docker 构建 -> 部署应用"
+    alauda.io/description.en: "aaaClone -> Golang Build -> Docker Build -> Deploy Application"
+    alauda.io/version: "1.1.00"
+    alauda.io/style.icon: golang
   labels:
-    category: CI
+    category: Build
 spec:
   engine: graph
   withSCM: true
   agent:
-    label: java
-    raw: |-
+    label: golang
+  raw: |-
       {
         kubernetes {
                   label 'mypod'
@@ -42,117 +41,235 @@ spec:
   stages:
     - name: Clone
       tasks:
-        - name: Clone
+        - name: clone
+          kind: ClusterPipelineTemplate
           type: public/clone
-    - name: BuildImage
+    - name: "Golang Build"
       tasks:
-        - name: BuildImage
-          type: testorg001/alaudawithoutCI
-          options:
-            timeout: 3600
+        - name: golang
+          kind: ClusterPipelineTemplate
+          type: public/golang
+    - name: "Docker Build"
+      tasks:
+        - name: build-docker
+          kind: ClusterPipelineTemplate
+          type: public/build-docker
+    - name: "DeployService"
+      tasks:
+        - name: deployService
+          kind: ClusterPipelineTemplate
+          type: public/deployService
   arguments:
     - displayName:
-        zh-CN: "基本信息"
-        en: "Basic Info"
+        zh-CN: "代码检出"
+        en: "Clone"
       items:
-        - name: "CIEnbale"
+        - name: "PlatformCodeRepository"
           schema:
-            type: boolean
-          binding:
-            - BuildImage.args.CIEnbale
-          display:
-            type: boolean
-            name:
-              zh-CN: "CI开关"
-              en: "CI enable"
-          required: false
-          default: ""
-        - name: "dockerfilePath"
-          schema:
-            type: string
-          binding:
-            - BuildImage.args.dockerfilePath
-          display:
-            type: string
-            name:
-              zh-CN: "Dockerfile路径"
-              en: "Dockerfile's path"
+            type: alauda.io/coderepositorymix
           required: true
-          default: ./
-        - name: "contextDir"
+          value: ""
+          binding:
+            - clone.args.PlatformCodeRepository
+          display:
+            type: alauda.io/coderepositorymix
+            name:
+              zh-CN: "代码仓库"
+              en: Code Repository
+            description:
+              zh-CN: "选择已为项目分配的代码仓库"
+              en: ""
+        - name: "Branch"
           schema:
             type: string
+          required: true
+          default: "*/master"
+          value: ""
           binding:
-            - BuildImage.args.contextDir
+            - clone.args.Branch
           display:
             type: string
+            advanced: true
             name:
-              zh-CN: "构建路径"
-              en: "Build context"
+              zh-CN: "分支"
+              en: Branch
+            description:
+              zh-CN: "检出代码仓库中的分支。默认为：*/master"
+              en: ""
+        - name: "RelativeDirectory"
+          schema:
+            type: string
           required: true
-          default: ./
+          value: ""
+          binding:
+            - clone.args.RelativeDirectory
+          default: "src"
+          display:
+            type: string
+            advanced: false
+            name:
+              zh-CN: "相对目录"
+              en: Relative Directory
+            description:
+              zh-CN: "在 Golang 程序为 GOPATH的子目录，例如 src/github.com/alauda/alauda。指定检出 Git 仓库的本地目录(相对于 workspace 根目录)。若为空，将使用 workspace 根目录"
+              en: "Used as the path in GOPATH, e.g src/github.com/alauda/alauda. Specify a local directory (relative to the workspace root) where the Git repository will be checked out. If left empty, the workspace root itself will be used"
     - displayName:
-        zh-CN: 配置镜像仓库 
-        en: Image Repository Configuration
+        zh-CN: "Golang 构建"
+        en: "Golang Build"
       items:
-        - name: "image"
+        - name: "buildCommand"
           schema:
-            type: alauda.io/imagerepositorymix
+            type: string
           binding:
-            - BuildImage.args.image
+            - golang.args.buildCommand
           display:
-            type: alauda.io/imagerepositorymix
+            type: string
+            name:
+              zh-CN: "构建命令"
+              en: "Build Command"
+            description:
+              zh-CN: "自定义更详细的构建命令。默认为：go build"
+              en: ""
+          required: false
+          value: ""
+          default: 'go build'
+    - displayName:
+        zh-CN: "Docker 构建"
+        en: "Docker Build"
+      items:
+        - name: "imageRepository"
+          schema:
+            type: alauda.io/dockerimagerepositorymix
+          binding:
+            - build-docker.args.imageRepository
+            - deployService.args.imageRepositoryDeploy
+          required: true
+          value: ""
+          display:
+            type: alauda.io/dockerimagerepositorymix
             name:
               zh-CN: "镜像仓库"
-              en: "Image repository"
+              en: Repository
             description:
-              zh: "构建生成的镜像"
-              en: "Image repository to store the built image"
-          required: true
-        - name: "imageTag"
+              zh-CN: "选择已为项目分配的镜像仓库或者输入地址"
+              en: ""
+        - name: "context"
           schema:
             type: string
           binding:
-            - BuildImage.args.imageTag
+            - build-docker.args.context
           display:
             type: string
+            advanced: true
             name:
-              zh-CN: "镜像版本"
-              en: "Customized image tag"
-          default: "latest"
+              zh-CN: "构建上下文"
+              en: "Build Context"
+            description:
+              zh-CN: "构建过程可以引用上下文中的任何文件。例如，构建中可以使用 COPY 命令在上下文中引用文件"
+              en: "The build process can refer to any of the files in the context. For example, your build can use a COPY instruction to reference a file in the context"
           required: true
-        - name: imageExtraTag
+          value: ""
+          default: '.'
+        - name: "buildArguments"
           schema:
             type: string
           binding:
-            - BuildImage.args.imageExtraTag
+            - build-docker.args.buildArguments
           display:
             type: string
+            advanced: true
             name:
-              zh-CN: "附加版本"
-              en: "Auto generated tag"
+              zh-CN: "构建参数"
+              en: "Build Arguments"
+            description:
+              zh-CN: "自定义更多的构建参数，对镜像构建进行更详细的配置"
+              en: ""
           required: false
-        - name: imageRegistryCredentialsId
+          value: ""
+          default: ''
+        - name: "dockerfile"
           schema:
             type: string
           binding:
-            - BuildImage.args.imageRegistryCredentialsId
+            - build-docker.args.dockerfile
           display:
-            type: alauda.io/jenkinscredentials
-            related: jenkins_integration_id
+            type: string
+            advanced: true
             name:
-              zh-CN: "镜像中心凭据"
-              en: "Registry credentials"
-          required: false
-        - name: "useImageCache"
-          schema:
-            type: boolean
-          binding:
-            - BuildImage.args.useImageCache
-          display:
-            type: boolean
-            name:
-              zh-CN: "开启镜像缓存"
-              en: "Use image cache"
-          default: ""
+              zh-CN: "Dockerfile"
+              en: "Dockerfile"
+            description:
+              zh-CN: "Dockerfile 在代码仓库中的绝对路径"
+              en: ""
           required: true
+          value: ""
+          default: 'Dockerfile'
+        - name: "retry"
+          schema:
+            type: string
+          binding:
+            - build-docker.args.retry
+          display:
+            type: string
+            advanced: true
+            name:
+              zh-CN: "重试次数"
+              en: "Retry Times"
+            description:
+              zh-CN: "生成镜像时的失败重试次数"
+              en: ""
+          required: false
+          value: ""
+          default: '3'
+    - displayName:
+        zh-CN: "部署应用"
+        en: "DeployService"
+      items:
+        - name: serviceName
+          schema:
+            type: string
+          binding:
+            - deployService.args.serviceName
+          display:
+            type: alauda.io/servicenamemix
+            name:
+              zh-CN: "应用名称"
+              en: "Application Name"
+            description:
+              zh-CN: "需要部署的应用"
+              en: ""
+          required: true
+          value: ""
+        - name: containerName
+          schema:
+            type: string
+          binding:
+            - deployService.args.containerName
+          display:
+            type: alauda.io/containername
+            name:
+              zh-CN: "容器名称"
+              en: "Container Name"
+            description:
+              zh-CN: "需要部署应用的容器"
+              en: ""
+            related: serviceName
+          required: true
+          value: ""
+        - name: timeout
+          schema:
+            type: string
+          binding:
+            - deployService.args.timeout
+          display:
+            type: string
+            advanced: true
+            name:
+              zh-CN: "超时时间（秒）"
+              en: "Timeout (s)"
+            description:
+              zh-CN: "当前任务的执行时间若超过超时时间，则会中止任务，流水线变为失败状态"
+              en: ""
+          required: true
+          default: '300'
+          value: ""
