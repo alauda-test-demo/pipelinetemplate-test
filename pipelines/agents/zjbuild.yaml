@@ -17,7 +17,7 @@ spec:
   withSCM: true
   agent:
     label: golang
-  raw: |-
+    raw: |-
       {
         kubernetes {
                   label 'mypod'
