@@ -1,14 +1,14 @@
 apiVersion: devops.alauda.io/v1alpha1
 kind: PipelineTemplate
 metadata:
-  name: JZGolangBuild
+  name: JZGolangBuild1
   namespace: default
   annotations:
-    alauda.io/displayName.zh-CN: "JZ Golang 构建并部署"
-    alauda.io/displayName.en: "aaaGolang Build & Deploy Application"
-    alauda.io/description.zh-CN: "aaa克隆代码 -> Golang 构建 -> Docker 构建 -> 部署应用"
-    alauda.io/description.en: "aaaClone -> Golang Build -> Docker Build -> Deploy Application"
-    alauda.io/version: "1.1.00"
+    alauda.io/displayName.zh-CN: "JZ Golang 构建1"
+    alauda.io/displayName.en: "aaa1Golang Build & Deploy Application"
+    alauda.io/description.zh-CN: "aaa1克隆代码 -> Golang 构建 -> Docker 构建 -> 部署应用"
+    alauda.io/description.en: "aaa1Clone -> Golang Build -> Docker Build -> Deploy Application"
+    alauda.io/version: "2.2.02"
     alauda.io/style.icon: golang
   labels:
     category: Build
