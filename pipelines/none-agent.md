@@ -1,0 +1,42 @@
+apiVersion: devops.alauda.io/v1alpha1
+kind: PipelineTemplate
+metadata:
+  name: noneAgent
+  namespace: default
+  annotations:
+    alauda.io/displayName.zh-CN: "不指定节点"
+    alauda.io/version: "0.0.2"
+  labels:
+    category: DeployService
+spec:
+  engine: graph
+  withSCM: false
+  agent:
+    label: java
+    raw: none
+  stages:
+    - name: "HelloWorldTask"
+      tasks:
+        - name: helloWorldTask
+          kind: PipelineTaskTemplate
+          type: public/helloWorldTask
+  arguments:
+    - displayName:
+        zh-CN: "Hello World"
+        en: "Hello World"
+      items:
+        - name: helloText
+          schema:
+            type: string
+          binding:
+            - helloWorldTask.args.helloText
+          display:
+            type: string
+            name:
+              zh-CN: "Hello Text"
+              en: "Hello Text"
+            description:
+              zh-CN: "Hello Text"
+              en: "Hello Text"
+          required: true
+          value: ""
