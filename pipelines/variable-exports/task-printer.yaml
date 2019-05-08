@@ -1,0 +1,40 @@
+apiVersion: devops.alauda.io/v1alpha1
+kind: PipelineTaskTemplate
+metadata:
+  name: printerTask
+  annotations:
+    alauda.io/displayName.zh-CN: "Hello world for export variable task"
+    alauda.io/version: "0.0.1"
+  labels:
+    category: CI
+spec:
+  engine: gotpl
+  agent:
+    label: "temp"
+  body: |+
+    // auto-genereated by jenkinsfilext
+    // def demoResult = alaudaStorage.getObject("buildStage", "if you have one")
+    def demoResult = alaudaStorage.getObject("buildStage")
+    echo "I'm a printer, I get a task: " + demoResult
+  imports:
+  - name: Demo_Result
+    var: demoResult # will auto-generate variable by this, declare first
+    options:
+      defaultValue: "if you have one"
+      optional: false # bool type
+    description:
+      zh-CN: "Receive build result"
+      en: "Receive build result"
+  arguments:
+    - name: "helloText"
+      schema:
+        type: string
+      required: true
+      display:
+        type: string
+        name:
+          zh-CN: "Hello text"
+          en: "Hello text"
+        description:
+          zh-CN: "Hello text"
+          en: "Hello text"
